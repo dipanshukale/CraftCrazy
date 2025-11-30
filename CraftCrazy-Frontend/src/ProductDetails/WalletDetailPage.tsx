@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CustomerReview from "../Components/CustomerReview";
 import FloatingCustomerReview from "../Components/FloatingCustomerReview";
 import { useAuth } from "../AuthContext/AuthContext";
+import { getApiUrl } from "../utils/apiConfig";
 
 // ---------- TYPES ----------
 type Params = { id: string };
@@ -98,7 +99,7 @@ export default function WalletDetailPage() {
 
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}api/products/${id}`);
+        const res = await axios.get(getApiUrl(`api/products/${id}`));
         const data: Wallet = res.data?.product;
         if (!data) throw new Error("No product found");
 
@@ -139,7 +140,7 @@ export default function WalletDetailPage() {
     if (!currentProduct || !currentVariant) return;
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}api/review/${currentProduct._id}?limit=8`
+        getApiUrl(`api/review/${currentProduct._id}?limit=8`)
       );
       setBackendRating(res.data.averageRating ?? 0);
       setBackendReviewsCount(res.data.reviewCount ?? 0);

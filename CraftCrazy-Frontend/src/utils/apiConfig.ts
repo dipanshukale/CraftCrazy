@@ -1,5 +1,15 @@
 // API Configuration with fallback
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://craftcrazy-1.onrender.com/';
+const getBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    // Ensure it ends with a slash
+    return envUrl.endsWith('/') ? envUrl : `${envUrl}/`;
+  }
+  // Fallback URL
+  return 'https://craftcrazy-1.onrender.com/';
+};
+
+export const API_BASE_URL = getBaseUrl();
 
 // Helper function to build API URLs
 export const getApiUrl = (endpoint: string): string => {

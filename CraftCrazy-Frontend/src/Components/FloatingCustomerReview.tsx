@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../AuthContext/AuthContext";
+import { getApiUrl } from "../utils/apiConfig";
 
 export interface Review {
   _id?: string;
@@ -71,7 +72,7 @@ const FloatingCustomerReview: React.FC<FloatingCustomerReviewProps> = ({
     try {
       const reviewPayload = { ...review, rating: Number(review.rating) };
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/reviews/add`, {
+      const res = await fetch(getApiUrl("api/reviews/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reviewPayload),

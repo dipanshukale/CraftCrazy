@@ -8,6 +8,7 @@ import { useCart } from "../AuthContext/CartContext";
 import { useAuth } from "../AuthContext/AuthContext";
 import CustomerReview from "../Components/CustomerReview";
 import FloatingReviewChat from "../Components/FloatingCustomerReview";
+import { getApiUrl } from "../utils/apiConfig";
 
 /* ---------------------- TYPES (same as BirthdayHamper) ---------------------- */
 
@@ -72,7 +73,7 @@ function useProductReviews(productId?: string) {
     const fetchReviews = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}api/reviews/product/${productId}?limit=8`
+          getApiUrl(`api/reviews/product/${productId}?limit=8`)
         );
         const data = await res.json();
         setBackendRating(data.averageRating ?? 0);
@@ -112,7 +113,7 @@ export default function KeyChainDetailPage() {
 
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}api/products/${id}`);
+        const res = await axios.get(getApiUrl(`api/products/${id}`));
         const data: KeyChainProduct = res.data?.product;
 
         if (!data) throw new Error("No product found");

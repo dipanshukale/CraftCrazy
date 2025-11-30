@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { getApiUrl } from "../utils/apiConfig";
 
 interface Review {
   _id: string;
@@ -50,7 +51,7 @@ export default function TestimonialsSlider() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}api/reviews/`);
+        const res = await axios.get(getApiUrl("api/reviews/"));
         const data = res.data.reviews || res.data || [];
 
         const mappedDynamic: Review[] = data

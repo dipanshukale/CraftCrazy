@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Instagram, MessageCircle, Send } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getApiUrl } from "../utils/apiConfig";
 
 type FormState = { name: string; email: string; phone: string; message: string; };
 const initialForm: FormState = { name: "", email: "", phone: "", message: "" };
@@ -21,7 +22,7 @@ const ContactUs: React.FC = () => {
   ev.preventDefault();
 
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/contact/add`, {
+    const res = await fetch(getApiUrl("api/contact/add"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

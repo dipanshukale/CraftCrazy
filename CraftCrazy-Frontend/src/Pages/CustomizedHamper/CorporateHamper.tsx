@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { getApiUrl } from "../../utils/apiConfig";
 
 // Full Product type definition
 interface Product {
@@ -51,7 +52,7 @@ const NewArrivals: React.FC = () => {
   useEffect(() => {
     const fetchNewArrivals = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}api/products/newarrivals`);
+        const res = await axios.get(getApiUrl("api/products/newarrivals"));
         const apiData = res.data?.allProudcts || [];
         const mapped: Product[] = apiData.map((item: any) => ({
           id: item.id || item._id,

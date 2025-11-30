@@ -4,6 +4,7 @@ import axios from "axios";
 import { useAuth } from "../AuthContext/AuthContext";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getApiUrl } from "../utils/apiConfig";
 
 type FormData = {
   name: string;
@@ -128,7 +129,7 @@ const CustomerDemandPremium = () => {
       if (formData.image) formDataToSend.append("image", formData.image);
 
       const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}api/demand/create`,
+        getApiUrl("api/demand/create"),
         formDataToSend,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

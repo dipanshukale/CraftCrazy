@@ -36,7 +36,6 @@ interface Product {
 const NewArrivals: React.FC = () => {
   const [loaded, setLoaded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [highlight, setHighlight] = useState("All Products");
   const [sortOption, setSortOption] = useState("Default sorting");
   const [products, setProducts] = useState<Product[]>([]);
@@ -83,9 +82,9 @@ const NewArrivals: React.FC = () => {
   useEffect(() => {
     const fetchNewArrivals = async () => {
       try {
-        const res = await axios.get(getApiUrl('api/products/newarrivals'));
+        const apiUrl = getApiUrl("api/products/newarrivals");
+        const res = await axios.get(apiUrl);
         const apiData = res.data?.allProudcts || [];
-        console.log(apiData)
         const mapped: Product[] = apiData.map((item: any) => ({
           id: item.id || item._id,
           name: item.name,
@@ -140,15 +139,7 @@ const NewArrivals: React.FC = () => {
     setTimeout(() => setToast(null), 2000);
   };
 
-  const toggleCategory = (cat: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
-    );
-  };
-
   const filteredProducts = products.filter((item) => {
-    const categoryMatch =
-      selectedCategories.length === 0 || selectedCategories.includes(item.type || "Others");
 
     let highlightMatch = true;
     switch (highlight) {
@@ -164,7 +155,7 @@ const NewArrivals: React.FC = () => {
       default:
         highlightMatch = true;
     }
-    return categoryMatch && highlightMatch;
+    return highlightMatch;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -342,6 +333,15 @@ const NewArrivals: React.FC = () => {
                               </span>
                             )}
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddToCart(item);
+                            }}
+                            className="mt-3 mx-2 mb-3 w-[calc(100%-1rem)] px-4 py-2 bg-[#C45A36] hover:bg-[#8c341f] text-white rounded-md text-sm font-medium transition-colors"
+                          >
+                            Add to Cart
+                          </button>
                         </Link>
                       </motion.div>
                     );

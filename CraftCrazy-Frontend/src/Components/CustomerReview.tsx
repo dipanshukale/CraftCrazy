@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiUrl } from "../utils/apiConfig";
 
 export interface Review {
   _id?: string;
@@ -34,7 +35,7 @@ export default function CustomerReview({
     if (!productId) return;
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}api/reviews/product/${productId}?limit=8`
+        getApiUrl(`api/reviews/product/${productId}?limit=8`)
       );
       if (!res.ok) throw new Error("Reviews fetch failed");
       const data = await res.json();
