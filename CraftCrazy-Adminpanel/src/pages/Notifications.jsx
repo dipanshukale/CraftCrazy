@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { Bell } from "lucide-react";
+import { getApiUrl } from "../config/api";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -60,7 +61,7 @@ const Notifications = () => {
   // Fetch API data (if available)
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/notifications")
+      .get(getApiUrl("api/notifications"))
       .then((res) => {
         if (res.data && res.data.length > 0) {
           setNotifications(res.data);

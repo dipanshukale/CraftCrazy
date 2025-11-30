@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import debounce from "lodash.debounce";
 import { useAuth } from "../contexts/AuthContext";
+import { getApiUrl } from "../config/api";
 
 interface AdminData {
   name: string;
@@ -43,7 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   // Fetch admin profile
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/admin/profile")
+      .get(getApiUrl("api/admin/profile"))
       .then((res) => setAdmin(res.data))
       .catch(() =>
         setAdmin({
@@ -62,7 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
         return;
       }
 
-      const res = await axios.get(`https://node-test-1-34fs.onrender.com/api/products?q=${value}`);
+      const res = await axios.get(getApiUrl(`api/products?q=${value}`));
       setResults(res.data);
     }, 400)
   ).current;

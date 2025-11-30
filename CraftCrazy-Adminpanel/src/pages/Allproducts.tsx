@@ -6,6 +6,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import { Link } from "react-router-dom";
 import { Trash2, Plus, Star, Pencil } from "lucide-react";
 import { motion } from "framer-motion";
+import { getApiUrl } from "../config/api";
 
 interface Product {
   _id?: string;
@@ -47,7 +48,7 @@ const AllProducts: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get("https://node-test-1-34fs.onrender.com/api/products/newarrivals");
+        const res = await axios.get(getApiUrl("api/products/newarrivals"));
         const productsData = res.data?.allProudcts || [];
         setProducts(productsData);
       } catch (err) {
@@ -128,7 +129,7 @@ const handleEdit = async (product: Product) => {
 
   if (formValues) {
     try {
-      await axios.patch(`https://craftcrazy-1.onrender.com//api/products/${product._id}`, formValues);
+      await axios.patch(getApiUrl(`api/products/${product._id}`), formValues);
 
       setProducts((prev) =>
         prev.map((p) => (p._id === product._id ? { ...p, ...formValues } : p))
@@ -208,7 +209,7 @@ const handleEdit = async (product: Product) => {
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(`https://node-test-1-34fs.onrender.com/api/products/${id}`, { withCredentials: true });
+        await axios.delete(getApiUrl(`api/products/${id}`), { withCredentials: true });
         setProducts((prev) => prev.filter((p) => p._id !== id));
         Swal.fire({
           title: "Deleted!",

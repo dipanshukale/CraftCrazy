@@ -3,6 +3,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Quote, Star, Mail, MapPin, Phone, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getApiUrl } from "../config/api";
 interface Review {
   _id: string;
   name: string;
@@ -27,7 +28,7 @@ const CustomerReviewsPage: React.FC = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get("https://node-test-1-34fs.onrender.com/api/reviews/");
+        const res = await axios.get(getApiUrl("api/reviews/"));
         const formattedReviews = res.data.reviews || res.data || [];
         setReviews(formattedReviews);
       } catch {
@@ -55,7 +56,7 @@ const CustomerReviewsPage: React.FC = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`https://node-test-1-34fs.onrender.com/api/reviews/${id}`);
+          await axios.delete(getApiUrl(`api/reviews/${id}`));
           setReviews((prev) => prev.filter((r) => r._id !== id));
 
           Swal.fire({

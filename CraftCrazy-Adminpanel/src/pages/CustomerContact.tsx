@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback, Fragment } from "react";
 import axios from "axios";
 import { socket } from "../socket";
+import { getApiUrl } from "../config/api";
 import {
   Search,
   Phone,
@@ -38,7 +39,7 @@ const CustomerContact: React.FC = () => {
     try {
     
     console.log("Contact Api is running...");
-      const res = await axios.get(`https://node-test-1-34fs.onrender.com/api/contact/all`, { withCredentials: true });
+      const res = await axios.get(getApiUrl("api/contact/all"), { withCredentials: true });
       const data = res.data?.contacts ?? res.data?.data ?? [];
       console.log(data);
       setContacts(Array.isArray(data) ? data : []);
@@ -81,7 +82,7 @@ const CustomerContact: React.FC = () => {
   const markResolved = async (id: string) => {
     try {
       setProcessingId(id);
-      await axios.patch(`https://node-test-1-34fs.onrender.com/api/contact/update-status/${id}`, { status: "resolved" });
+      await axios.patch(getApiUrl(`api/contact/update-status/${id}`), { status: "resolved" });
       setContacts((prev) => prev.map((p) => (p._id === id ? { ...p, status: "resolved" } : p)));
     } finally {
       setProcessingId(null);

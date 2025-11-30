@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import axios from "axios";
 import { socket } from "../../src/socket";
+import { getApiUrl } from "../config/api";
 
 type Product = {
   productId: string;
@@ -76,13 +77,13 @@ const Dashboard: React.FC = () => {
         activeRes,
         processingRes,
       ] = await Promise.all([
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/products"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/customers"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/getOrder"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/status/Shipped"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/status/Delivered"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/active"),
-        axios.get("https://node-test-1-34fs.onrender.com/api/order/status/Processing"),
+        axios.get(getApiUrl("api/order/products")),
+        axios.get(getApiUrl("api/order/customers")),
+        axios.get(getApiUrl("api/order/getOrder")),
+        axios.get(getApiUrl("api/order/status/Shipped")),
+        axios.get(getApiUrl("api/order/status/Delivered")),
+        axios.get(getApiUrl("api/order/active")),
+        axios.get(getApiUrl("api/order/status/Processing")),
       ]);
 
       const allProducts = productRes.data.data || [];

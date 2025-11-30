@@ -3,6 +3,7 @@ import axios from "axios";
 import { FaTrashAlt } from "react-icons/fa";
 import Swal from "sweetalert2"; 
 import "sweetalert2/dist/sweetalert2.min.css";
+import { getApiUrl } from "../config/api";
 import {
   BarChart,
   Bar,
@@ -41,7 +42,7 @@ const Order: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`https://node-test-1-34fs.onrender.com/api/order/getOrder`, {
+      const res = await axios.get(getApiUrl("api/order/getOrder"), {
         withCredentials: true,
       });
 
@@ -69,7 +70,7 @@ const Order: React.FC = () => {
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(`https://node-test-1-34fs.onrender.com/api/order/${orderId}`, {
+        await axios.delete(getApiUrl(`api/order/${orderId}`), {
           withCredentials: true,
         });
 
@@ -96,7 +97,7 @@ const Order: React.FC = () => {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       await axios.patch(
-        `https://node-test-1-34fs.onrender.com/api/order/order/${orderId}`,
+        getApiUrl(`api/order/order/${orderId}`),
         { status: newStatus },
         { withCredentials: true }
       );

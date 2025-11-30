@@ -1,6 +1,7 @@
 // src/pages/DemandOrdersPage.tsx
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getApiUrl } from "../config/api";
 import {
   DataGrid,
   GridColDef,
@@ -59,7 +60,7 @@ export default function DemandOrdersPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("https://node-test-1-34fs.onrender.com/api/demand/demandOrder");
+        const res = await axios.get(getApiUrl("api/demand/demandOrder"));
 
         const mappedRows: DemandOrder[] = res.data?.customizedOrder?.map((item: any) => ({
           id: item._id,

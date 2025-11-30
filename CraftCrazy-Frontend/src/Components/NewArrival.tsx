@@ -5,6 +5,7 @@ import { useCart } from "../AuthContext/CartContext";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext/AuthContext";
 import axios from "axios";
+import { getApiUrl } from "../utils/apiConfig";
 
 // Full Product type definition
 interface Product {
@@ -82,7 +83,7 @@ const NewArrivals: React.FC = () => {
   useEffect(() => {
     const fetchNewArrivals = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}api/products/newarrivals`);
+        const res = await axios.get(getApiUrl('api/products/newarrivals'));
         const apiData = res.data?.allProudcts || [];
         console.log(apiData)
         const mapped: Product[] = apiData.map((item: any) => ({

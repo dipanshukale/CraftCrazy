@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getApiUrl } from "../config/api";
 
 interface ProductForm {
   name: string;
@@ -152,7 +153,7 @@ const AddProducts = () => {
       });
 
       const res = await axios.post(
-        "https://node-test-1-34fs.onrender.com/api/products/add",
+        getApiUrl("api/products/add"),
         fd,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { getApiUrl } from "../config/api";
 import {
   FileText,
   Plus,
@@ -34,7 +35,7 @@ const InvoiceList: React.FC = () => {
     const fetchInvoices = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("https://node-test-1-34fs.onrender.com/api/invoice/");
+        const res = await axios.get(getApiUrl("api/invoice/"));
         setInvoices(res.data);
       } catch (err) {
         console.error("Error fetching invoices:", err);

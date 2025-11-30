@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { useReactToPrint } from "react-to-print";
+import { getApiUrl } from "../config/api";
 
 const MySwal = withReactContent(Swal);
 
@@ -51,7 +52,7 @@ const handlePrint = useReactToPrint({
     const fetchInvoice = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`https://node-test-1-34fs.onrender.com/api/invoice/${id}`);
+        const res = await axios.get(getApiUrl(`api/invoice/${id}`));
         // adapt to your API shape: some APIs wrap data in res.data.invoice
         const data: Invoice = res.data?.invoice ?? res.data;
         if (mounted) setInvoice(data);
@@ -99,7 +100,7 @@ const handlePrint = useReactToPrint({
         // preConfirm can return a promise; show loading inside modal
         try {
           setDeleting(true);
-          await axios.delete(`https://node-test-1-34fs.onrender.com/api/invoice/${invoice._id}`);
+          await axios.delete(getApiUrl(`api/invoice/${invoice._id}`));
           return true;
         } catch (err: any) {
           // show validation message inside Swal

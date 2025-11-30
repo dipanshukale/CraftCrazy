@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { Users, CalendarDays, MapPin, Phone, Mail, TrendingUp, UserPlus } from "lucide-react";
+import { getApiUrl } from "../config/api";
 
 interface Customer {
   _id: string;
@@ -24,7 +25,7 @@ const AllCustomers: React.FC = () => {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("https://node-test-1-34fs.onrender.com/api/order/customers");
+        const res = await axios.get(getApiUrl("api/order/customers"));
         if (res.data?.data) {
           setCustomers(res.data.data);
         }

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { getApiUrl } from "../config/api";
 
 interface Product {
   _id: string;
@@ -63,7 +64,7 @@ const ProductDetail: React.FC = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`https://node-test-1-34fs.onrender.com/api/products/${id}`);
+        const res = await axios.get(getApiUrl(`api/products/${id}`));
         console.log(res);
         setProduct(res.data?.product);
       } catch (error) {
@@ -133,7 +134,7 @@ const ProductDetail: React.FC = () => {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`https://node-test-1-34fs.onrender.com/api/products/${product?._id}`);
+        await axios.delete(getApiUrl(`api/products/${product?._id}`));
         alert("🗑️ Product deleted successfully!");
         navigate("/admin/products");
       } catch (error) {
@@ -145,7 +146,7 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (!product) return;
     try {
-      await axios.post("http://localhost:5000/api/cart", {
+      await axios.post(getApiUrl("api/cart"), {
         productId: product._id,
         quantity,
       });
