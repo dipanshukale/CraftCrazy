@@ -1,6 +1,7 @@
 # Environment files
-.env
+
 node_modules/
+.env
 .env.local
 .env.*.local
 
