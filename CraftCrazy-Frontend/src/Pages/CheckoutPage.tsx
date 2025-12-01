@@ -135,7 +135,7 @@ const CheckoutPage: React.FC = () => {
         }
       );
       const options = {
-        key: "rzp_test_RW8DPbQWX8F2bT",
+        key: "rzp_live_RmGqBYDiV9fORe",
         amount: amount * 100,
         currency: "INR",
         name: "CraftiCrazy",
