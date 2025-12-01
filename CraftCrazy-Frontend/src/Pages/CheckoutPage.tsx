@@ -131,6 +131,8 @@ const CheckoutPage: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log(data.orderId);
+
       if (!data.orderId) {
         console.log("Razorpay order ID not received from backend.");
       }
