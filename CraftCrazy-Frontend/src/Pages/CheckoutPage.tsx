@@ -135,7 +135,7 @@ const CheckoutPage: React.FC = () => {
         }
       );
       const options = {
-        key: "rzp_live_RmGqBYDiV9fORe",
+        key: import.meta.env.VITE_RAZORPAY_KEY,
         amount: amount * 100,
         currency: "INR",
         name: "CraftiCrazy",
