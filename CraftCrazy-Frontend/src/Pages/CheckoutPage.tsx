@@ -132,7 +132,7 @@ const CheckoutPage: React.FC = () => {
       );
 
       if (!data.orderId) {
-        throw new Error("Razorpay order ID not received from backend.");
+        console.log("Razorpay order ID not received from backend.");
       }
 
       const options = {
