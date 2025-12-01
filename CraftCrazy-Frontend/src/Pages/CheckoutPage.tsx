@@ -5,37 +5,13 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getApiUrl } from "../utils/apiConfig";
 
-interface IOrderItem {
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  customization?: string;
-}
-
-interface IOrder {
-  emailOrPhone: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  address: string;
-  apartment?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  customization?: string;
-  paymentMethod: string;
-  items?: IOrderItem[];
-  totalAmount?: number;
-  createdAt?: Date;
-}
-
 const CheckoutPage: React.FC = () => {
   const { cart, clearCart, updateCartItem } = useCart();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
   const shippingCharges = 60;
 
-  const initialFormData: IOrder = {
+  const [formData, setFormData] = useState({
     emailOrPhone: "",
     firstName: "",
     lastName: "",
@@ -47,22 +23,29 @@ const CheckoutPage: React.FC = () => {
     pincode: "",
     customization: "",
     paymentMethod: "",
-  };
+  });
 
-  const [formData, setFormData] = useState<IOrder>(initialFormData);
   const [toast, setToast] = useState<string | null>(null);
-  const [isLoading, setLoading] = useState<boolean>(false);
-  const token = localStorage.getItem("token");
+  const [isLoading, setLoading] = useState(false);
 
-  // Load Razorpay script dynamically
-  const loadRazorpayScript = (): Promise<boolean> => {
+  // Razorpay Script Loader
+  const loadScript = (src: string) => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.src = src;
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
+  };
+
+  const totalPrice = cart.reduce(
+    (t, item) => t + Number(item.price) * Number(item.quantity),
+    0
+  );
+
+  const handleChange = (e: any) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   useEffect(() => {
@@ -72,46 +55,26 @@ const CheckoutPage: React.FC = () => {
     }
   }, [toast]);
 
-  useEffect(() => {
-    if (cart.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        customization: cart.map((item) => item.customization || "").join("; "),
-      }));
-    }
-  }, [cart]);
-
-  const totalPrice = cart.reduce(
-    (total, item) => total + Number(item.price) * Number(item.quantity),
-    0
-  );
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleRazorpayPayment = async (amount: number) => {
-    setLoading(true);
+    console.log("Starting Razorpay checkout...");
 
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      setToast("Razorpay SDK failed to load. Are you online?");
-      setLoading(false);
+    const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    if (!res) {
+      console.log("Script failed to load");
+      setToast("Razorpay SDK failed. Check internet.");
       return;
     }
 
     try {
-      // create order on backend
+      console.log("Sending order create request…");
+
       const { data } = await axios.post(
         getApiUrl("api/order/createOrder"),
         {
           customer: {
             name: `${formData.firstName} ${formData.lastName}`,
             email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
-            contact: formData.phone || formData.emailOrPhone,
+            contact: formData.phone,
             address: formData.address,
             apartment: formData.apartment,
             city: formData.city,
@@ -119,7 +82,7 @@ const CheckoutPage: React.FC = () => {
             pincode: formData.pincode,
           },
           items: cart.map((item) => ({
-            productId: item.id,
+            productId: item.productId || item._id, // FIXED
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -131,96 +94,64 @@ const CheckoutPage: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log(data.orderId);
-
-      if (!data.orderId) {
-        console.log("Razorpay order ID not received from backend.");
-      }
+      console.log("Order created response: ", data);
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
+        key: import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_123456789",
         amount: amount * 100,
         currency: "INR",
-        name: "CraftiCrazy",
-        description: "Order Payment",
-        order_id: data.orderId, // Razorpay order ID from backend
-        handler: async function (response: any) {
-          try {
-            await axios.post(
-              getApiUrl("api/order/orderComplete"),
-              { orderDBId: data.orderDBId, paymentId: response.razorpay_payment_id },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setToast("Payment successful!");
-            clearCart();
-            setFormData(initialFormData);
-            navigate("/success", { state: { message: "Your order has been placed successfully!" } });
-          } catch (err) {
-            console.error(err);
-            setToast("Payment succeeded but confirmation failed. Contact support.");
-          } finally {
-            setLoading(false);
-          }
+        name: "Crafticrazy",
+        description: "Product Order",
+        order_id: data.orderId,
+        handler: async (response: any) => {
+          console.log("Payment success response:", response);
+
+          await axios.post(
+            getApiUrl("api/order/orderComplete"),
+            {
+              orderDBId: data.orderDBId,
+              paymentId: response.razorpay_payment_id,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          setToast("Payment completed successfully!");
+          clearCart();
+          navigate("/success", { state: { message: "Order placed successfully!" } });
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
-          contact: formData.phone || formData.emailOrPhone,
+          email: formData.emailOrPhone,
+          contact: formData.phone,
         },
         theme: { color: "#5b2232" },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+      console.log("Opening Razorpay popup...");
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.open();
     } catch (err: any) {
-      console.error(err);
-      setToast(err.response?.data?.message || "Payment initiation failed. Please try again.");
-      setLoading(false);
+      console.error("PAYMENT ERROR:", err);
+      setToast(err.response?.data?.message || "Payment failed");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
 
-    const value = formData.emailOrPhone.trim();
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    const isPhone = /^[0-9]{10}$/.test(value);
-
-    if (!isEmail && !isPhone) {
-      setToast("Please enter a valid email or 10-digit phone number.");
-      return;
-    }
-
     if (!formData.paymentMethod) {
-      setToast("Please select a payment method.");
+      setToast("Please select payment method");
       return;
     }
-
-    if (cart.length === 0) {
-      setToast("Your cart is empty.");
-      return;
-    }
-
-    cart.forEach((item) => {
-      updateCartItem(item.id, {
-        ...item,
-        customization: {
-          available: !!formData.customization,
-          userInput: formData.customization || "",
-        },
-      });
-    });
 
     const amount = totalPrice + shippingCharges;
 
     if (formData.paymentMethod === "UPI") {
       handleRazorpayPayment(amount);
     } else {
-      // COD
-      setToast("Order placed successfully! Cash on Delivery selected.");
+      setToast("Order placed via COD");
       clearCart();
-      setFormData(initialFormData);
-      navigate("/success", { state: { message: "Your order is confirmed!" } });
+      navigate("/success", { state: { message: "Order Confirmed!" } });
     }
   };
 

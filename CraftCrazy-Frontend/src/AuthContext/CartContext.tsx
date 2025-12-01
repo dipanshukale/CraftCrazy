@@ -7,6 +7,8 @@ import "react-toastify/dist/ReactToastify.css";
 interface CartItem {
   id: string;
   name: string;
+  productId?: string;
+  _id?: string; 
   price: number;
   quantity: number;
   image?: string;
