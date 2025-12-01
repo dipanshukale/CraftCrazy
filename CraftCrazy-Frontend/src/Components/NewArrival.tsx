@@ -83,6 +83,7 @@ const NewArrivals: React.FC = () => {
     const fetchNewArrivals = async () => {
       try {
         const apiUrl = getApiUrl("api/products/newarrivals");
+        console.log(apiUrl);
         const res = await axios.get(apiUrl);
         const apiData = res.data?.allProudcts || [];
         const mapped: Product[] = apiData.map((item: any) => ({
