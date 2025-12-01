@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getApiUrl } from "../utils/apiConfig";
 
-
 interface IOrderItem {
   productId: string;
   name: string;
@@ -96,77 +95,68 @@ const CheckoutPage: React.FC = () => {
 
   const handleRazorpayPayment = async (amount: number) => {
     setLoading(true);
-    const res = await loadRazorpayScript();
-    if (!res) {
+
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
       setToast("Razorpay SDK failed to load. Are you online?");
       setLoading(false);
       return;
     }
 
-    console.log("Payment Api is running...");
-    console.log("Razorpay Key:", import.meta.env.VITE_RAZORPAY_KEY);
-
     try {
-      // Calling  backend to create order
-      const { data } = await axios.post(getApiUrl('api/order/createOrder'), {
-        customer: {
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
-          contact: formData.phone || formData.emailOrPhone,
-          address: formData.address,
-          apartment: formData.apartment,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-        },
-        items: cart.map(item => ({
-          productId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          customization: item.customization?.userInput || "",
-        })),
-        totalAmount: amount,
-        paymentMethod: formData.paymentMethod,
-      },
+      // create order on backend
+      const { data } = await axios.post(
+        getApiUrl("api/order/createOrder"),
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
+          customer: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
+            contact: formData.phone || formData.emailOrPhone,
+            address: formData.address,
+            apartment: formData.apartment,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
           },
-        }
+          items: cart.map((item) => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            customization: item.customization?.userInput || "",
+          })),
+          totalAmount: amount,
+          paymentMethod: formData.paymentMethod,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      if (!data.orderId) {
+        throw new Error("Razorpay order ID not received from backend.");
+      }
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY,
         amount: amount * 100,
         currency: "INR",
         name: "CraftiCrazy",
         description: "Order Payment",
-        order_id: data.orderId, // use Razorpay order ID from backend
+        order_id: data.orderId, // Razorpay order ID from backend
         handler: async function (response: any) {
           try {
-            // Call backend to mark order as paid
-            await axios.post(getApiUrl('api/order/orderComplete'),
-              {
-                orderDBId: data.orderDBId,
-                paymentId: response.razorpay_payment_id,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              }
+            await axios.post(
+              getApiUrl("api/order/orderComplete"),
+              { orderDBId: data.orderDBId, paymentId: response.razorpay_payment_id },
+              { headers: { Authorization: `Bearer ${token}` } }
             );
-
-            setToast("Payment successful! Thank you for shopping with us.");
+            setToast("Payment successful!");
             clearCart();
             setFormData(initialFormData);
-            setLoading(false);
-            navigate("/success", {
-              state: { message: "Your order has been placed successfully!" },
-            });
+            navigate("/success", { state: { message: "Your order has been placed successfully!" } });
           } catch (err) {
             console.error(err);
-            setToast("Payment successful but confirmation failed. Contact support.");
+            setToast("Payment succeeded but confirmation failed. Contact support.");
+          } finally {
             setLoading(false);
           }
         },
@@ -178,15 +168,14 @@ const CheckoutPage: React.FC = () => {
         theme: { color: "#5b2232" },
       };
 
-      const razor = new (window as any).Razorpay(options);
-      razor.open();
-    } catch (err) {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
       console.error(err);
-      setToast("Payment initiation failed. Please try again.");
+      setToast(err.response?.data?.message || "Payment initiation failed. Please try again.");
       setLoading(false);
     }
   };
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,7 +185,17 @@ const CheckoutPage: React.FC = () => {
     const isPhone = /^[0-9]{10}$/.test(value);
 
     if (!isEmail && !isPhone) {
-      setToast("Please Enter a valid Email or 10-digit Phone number.");
+      setToast("Please enter a valid email or 10-digit phone number.");
+      return;
+    }
+
+    if (!formData.paymentMethod) {
+      setToast("Please select a payment method.");
+      return;
+    }
+
+    if (cart.length === 0) {
+      setToast("Your cart is empty.");
       return;
     }
 
@@ -210,9 +209,12 @@ const CheckoutPage: React.FC = () => {
       });
     });
 
+    const amount = totalPrice + shippingCharges;
+
     if (formData.paymentMethod === "UPI") {
-      handleRazorpayPayment(totalPrice + shippingCharges);
+      handleRazorpayPayment(amount);
     } else {
+      // COD
       setToast("Order placed successfully! Cash on Delivery selected.");
       clearCart();
       setFormData(initialFormData);
