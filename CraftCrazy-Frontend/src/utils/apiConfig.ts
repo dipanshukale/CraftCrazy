@@ -6,7 +6,7 @@ const getBaseUrl = (): string => {
     return envUrl.endsWith('/') ? envUrl : `${envUrl}/`;
   }
   // Fallback URL
-  return 'https://craftcrazy-2.onrender.com/';
+  return 'https://craftcrazy-1.onrender.com/';
 };
 
 export const API_BASE_URL = getBaseUrl();
