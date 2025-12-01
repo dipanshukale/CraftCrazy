@@ -7,18 +7,15 @@ import { errorHandler } from "./middlewares/error.middleware";
 dotenv.config();
 
 const app: Application = express();
-
-// Allowed domains list
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.ADMIN_PANEL_URL,
+  process.env.FRONTEND_URL ?? "https://craft-crazy.vercel.app",
+  process.env.ADMIN_PANEL_URL ?? "https://craft-crazy-bu3y.vercel.app",
 ];
 
-// Middlewares
 app.use(
   cors({
     origin: (origin, callback) => {
-      console.log("Origin:", origin); // For debugging
+      console.log("Origin:", origin);
 
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -26,10 +23,11 @@ app.use(
         callback(new Error("CORS blocked: " + origin));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   })
 );
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
