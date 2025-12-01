@@ -106,6 +106,7 @@ const CheckoutPage: React.FC = () => {
     console.log("Payment Api is running...");
 
     try {
+      console.log("Razorpay Key:", import.meta.env.VITE_RAZORPAY_KEY);
       // Calling  backend to create order
       const { data } = await axios.post(getApiUrl('api/order/createOrder'), {
         customer: {
