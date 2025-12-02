@@ -27,9 +27,12 @@ const OrderSchema = new Schema<IOrderDocument>(
     },
     items: { type: [orderItemSchema], required: true },
     totalAmount: { type: Number, required: true },
+    currency: { type: String, default: "INR" },
     paymentMethod: { type: String, required: true, enum: ["UPI", "CASH", "CARD"] },
     razorPayOrderId: { type: String },
     razorpayPaymentId: { type: String },
+    razorpaySignature: { type: String },
+    paymentFailureReason: { type: String },
     orderStatus: {
       type: String,
       enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],

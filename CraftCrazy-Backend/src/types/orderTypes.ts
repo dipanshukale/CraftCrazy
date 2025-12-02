@@ -19,9 +19,12 @@ export interface IOrder {
     },
     items:IorderItem[];
     totalAmount:number;
+    currency?: string;
     paymentMethod:string;
     razorPayOrderId?: string;
     razorpayPaymentId?:string;
+    razorpaySignature?: string;
+    paymentFailureReason?: string;
     createdAt?: Date;
 
 

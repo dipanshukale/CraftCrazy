@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Order, IOrderDocument } from "../models/orderModel";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - module provided by 'razorpay' package, custom types declared separately
@@ -22,46 +23,100 @@ const razorpay = new Razorpay({
   key_secret: RAZORPAY_SECRET_KEY!,
 });
 
-export const createOrderService = async (orderData:IOrderDocument) => {
-    //save data to db first
-    const order = new Order(orderData);
+export const createOrderService = async (orderData: IOrderDocument) => {
+  // Persist order with pending status before forwarding to Razorpay
+  const order = new Order({
+    ...orderData,
+    currency: orderData.currency || "INR",
+    transactionStatus: "Payment Pending",
+  });
+  await order.save();
+
+  if (order.paymentMethod === "UPI") {
+    const amountInPaise = Math.round(order.totalAmount * 100);
+
+    const razorpayOrder = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: order.currency || "INR",
+      receipt: order._id.toString(),
+      notes: {
+        customerName: order.customer.name,
+        customerContact: order.customer.contact,
+      },
+    });
+
+    order.razorPayOrderId = razorpayOrder.id;
     await order.save();
-
-    if(order.paymentMethod === "UPI"){
-
-        const razorpayOrder = await razorpay.orders.create({
-            amount:order.totalAmount * 100,
-            currency:"INR",
-            receipt: order._id.toString(),
-            payment_capture: true,
-        });
-
-        order.razorPayOrderId = razorpayOrder.id;
-        await order.save();
-        getIO().emit("order-updated",order);
-        getIO().emit("trend:update");
-
-
-
-        return {orderDBId: order._id, orderId: razorpayOrder.id};
-    }
-
-    return {orderDBId: order._id};
-}
-
-
-export const completeOrderService = async(orderDBId:string, paymentId:string) => {
-    const order = await Order.findById(orderDBId);
-    if(!order) throw new Error("Order Not Found");
-
-    order.razorpayPaymentId = paymentId;
-    order.transactionStatus = "Payment Succeed";
-    order.orderStatus = "Processing";
-    await order.save();
-    getIO().emit("order-updated",order);
+    getIO().emit("order-updated", order);
     getIO().emit("trend:update");
-    return order;
+
+    return {
+      orderDBId: order._id,
+      orderId: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      keyId: RAZORPAY_KEY_ID,
+    };
+  }
+
+  return { orderDBId: order._id };
+};
+
+interface ICompleteOrderPayload {
+  orderDBId: string;
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  razorpaySignature: string;
 }
+
+export const completeOrderService = async ({
+  orderDBId,
+  razorpayPaymentId,
+  razorpayOrderId,
+  razorpaySignature,
+}: ICompleteOrderPayload) => {
+  const order = await Order.findById(orderDBId);
+  if (!order) throw new Error("Order Not Found");
+
+  if (order.razorPayOrderId !== razorpayOrderId) {
+    throw new Error("Razorpay order mismatch");
+  }
+
+  const generatedSignature = crypto
+    .createHmac("sha256", RAZORPAY_SECRET_KEY!)
+    .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+    .digest("hex");
+
+  if (generatedSignature !== razorpaySignature) {
+    order.transactionStatus = "Payment Failed";
+    order.paymentFailureReason = "Invalid payment signature";
+    await order.save();
+    throw new Error("Payment signature verification failed");
+  }
+
+  order.razorpayPaymentId = razorpayPaymentId;
+  order.razorpaySignature = razorpaySignature;
+  order.transactionStatus = "Payment Succeed";
+  order.orderStatus = "Processing";
+  order.paymentFailureReason = undefined;
+  await order.save();
+
+  getIO().emit("order-updated", order);
+  getIO().emit("trend:update");
+  return order;
+};
+
+export const failOrderService = async (orderDBId: string, reason?: string) => {
+  const order = await Order.findById(orderDBId);
+  if (!order) throw new Error("Order Not Found");
+
+  order.transactionStatus = "Payment Failed";
+  order.paymentFailureReason = reason || "Payment failed on client";
+  await order.save();
+
+  getIO().emit("order-updated", order);
+  return order;
+};
 
 export const getAllOrders = async () => {
     return await Order.find().sort({createdAt:-1});

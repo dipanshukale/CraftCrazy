@@ -13,9 +13,24 @@ export const createOrder = async (req:Request, res:Response, next: NextFunction)
 
 export const completeOrder = async (req:Request, res:Response, next:NextFunction) => {
     try {
-        const {orderDBId, paymentId} = req.body;
-        const order = await orderService.completeOrderService(orderDBId,paymentId);
+        const {orderDBId, razorpayPaymentId, razorpayOrderId, razorpaySignature} = req.body;
+        const order = await orderService.completeOrderService({
+            orderDBId,
+            razorpayPaymentId,
+            razorpayOrderId,
+            razorpaySignature,
+        });
         res.json(order);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const failedOrder = async (req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {orderDBId, reason} = req.body;
+        const order = await orderService.failOrderService(orderDBId, reason);
+        res.status(200).json(order);
     } catch (error) {
         next(error);
     }

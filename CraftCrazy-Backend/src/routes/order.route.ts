@@ -4,6 +4,7 @@ import * as orderCtrl from "../controllers/order.controller";
 const router = Router();
 router.post("/createOrder", orderCtrl.createOrder);
 router.post("/orderComplete", orderCtrl.completeOrder);
+router.post("/orderFailed", orderCtrl.failedOrder);
 
 //admin routes
 router.get("/getOrder",orderCtrl.getAllOrders);

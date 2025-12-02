@@ -57,6 +57,10 @@ const CheckoutPage: React.FC = () => {
   // Load Razorpay script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
+      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+        resolve(true);
+        return;
+      }
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
@@ -142,16 +146,18 @@ const CheckoutPage: React.FC = () => {
         getAuthConfig()
       );
 
-      console.log(data.orderId);
-
-      if (!data.orderId) {
-        console.log("Razorpay order ID not received from backend.");
+      const publicKey = data.keyId || import.meta.env.VITE_RAZORPAY_KEY;
+      if (!data.orderId || !data.orderDBId || !publicKey) {
+        console.log("Razorpay order initialization info missing.", data);
+        setToast("Unable to initiate payment. Please try again later.");
+        setLoading(false);
+        return;
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount: amount * 100,
-        currency: "INR",
+        key: publicKey,
+        amount: data.amount || amount * 100,
+        currency: data.currency || "INR",
         name: "CraftiCrazy",
         description: "Order Payment",
         order_id: data.orderId, // Razorpay order ID from backend
@@ -159,7 +165,12 @@ const CheckoutPage: React.FC = () => {
           try {
             await axios.post(
               getApiUrl("api/order/orderComplete"),
-              { orderDBId: data.orderDBId, paymentId: response.razorpay_payment_id },
+              {
+                orderDBId: data.orderDBId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              },
               getAuthConfig()
             );
             setToast("Payment successful!");
@@ -173,6 +184,9 @@ const CheckoutPage: React.FC = () => {
             setLoading(false);
           }
         },
+        modal: {
+          ondismiss: () => setLoading(false),
+        },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
@@ -182,6 +196,23 @@ const CheckoutPage: React.FC = () => {
       };
 
       const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", async (response: any) => {
+        try {
+          await axios.post(
+            getApiUrl("api/order/orderFailed"),
+            {
+              orderDBId: data.orderDBId,
+              reason: response.error?.description || response.error?.reason || "Payment failed",
+            },
+            getAuthConfig()
+          );
+        } catch (failureError) {
+          console.error(failureError);
+        } finally {
+          setToast(response.error?.description || "Payment failed. Please try again.");
+          setLoading(false);
+        }
+      });
       rzp.open();
     } catch (err: any) {
       console.error(err);
