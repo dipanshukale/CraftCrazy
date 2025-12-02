@@ -146,7 +146,9 @@ const CheckoutPage: React.FC = () => {
         getAuthConfig()
       );
 
-      const publicKey = data.keyId || import.meta.env.VITE_RAZORPAY_KEY;
+      // Always use the key coming from backend (which reads live env vars).
+      // This avoids accidentally falling back to any test key in frontend env.
+      const publicKey = data.keyId;
       if (!data.orderId || !data.orderDBId || !publicKey) {
         console.log("Razorpay order initialization info missing.", data);
         setToast("Unable to initiate payment. Please try again later.");

@@ -32,7 +32,16 @@ const createOrderService = async (orderData) => {
         await order.save();
         (0, initSocket_1.getIO)().emit("order-updated", order);
         (0, initSocket_1.getIO)().emit("trend:update");
-        return { orderDBId: order._id, orderId: razorpayOrder.id };
+        // Send back all the details the frontend needs, including the
+        // public key. This must be the LIVE key configured in env:
+        // RAZORPAY_KEY_ID / RAZORPAY_SECRET_KEY.
+        return {
+            orderDBId: order._id,
+            orderId: razorpayOrder.id,
+            amount: razorpayOrder.amount,
+            currency: razorpayOrder.currency,
+            keyId: RAZORPAY_KEY_ID,
+        };
     }
     return { orderDBId: order._id };
 };
