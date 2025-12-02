@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const order_route_1 = __importDefault(require("./order.route"));
+const auth_route_1 = __importDefault(require("./auth.route"));
+const contact_route_1 = __importDefault(require("./contact.route"));
+const demand_route_1 = __importDefault(require("./demand.route"));
+const product_route_1 = __importDefault(require("./product.route"));
+const invoice_route_1 = __importDefault(require("../routes/invoice.route"));
+const review_route_1 = __importDefault(require("../routes/review.route"));
+const router = (0, express_1.Router)();
+router.use("/order", order_route_1.default);
+router.use("/auth", auth_route_1.default);
+router.use("/contact", contact_route_1.default);
+router.use("/demand", demand_route_1.default);
+router.use("/products", product_route_1.default);
+router.use("/invoice", invoice_route_1.default);
+router.use("/reviews", review_route_1.default);
+exports.default = router;

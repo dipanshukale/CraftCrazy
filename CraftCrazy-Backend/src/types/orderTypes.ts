@@ -9,7 +9,7 @@ export interface IorderItem {
 export interface IOrder {
     customer : {
         name: string;
-        email: string;
+        email?: string;
         contact: string;
         address: string;
         apartment?:string;

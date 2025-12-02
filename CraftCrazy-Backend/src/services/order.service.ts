@@ -1,15 +1,25 @@
-import { Order,IOrderDocument } from "../models/orderModel";
-import RazorPay from "razorpay";
+import { Order, IOrderDocument } from "../models/orderModel";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - module provided by 'razorpay' package, custom types declared separately
+import Razorpay from "razorpay";
 import dotenv from "dotenv";
 import { getIO } from "../socket/initSocket";
 
-
 dotenv.config();
 
+// Read env vars with runtime validation
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_SECRET_KEY = process.env.RAZORPAY_SECRET_KEY;
 
-const razorpay = new RazorPay({
-    key_id:process.env.RAZORPAY_KEY_ID,
-    key_secret:process.env.RAZORPAY_SECRET_KEY,
+if (!RAZORPAY_KEY_ID || !RAZORPAY_SECRET_KEY) {
+  throw new Error(
+    "Razorpay credentials are missing. Please set RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY."
+  );
+}
+
+const razorpay = new Razorpay({
+  key_id: RAZORPAY_KEY_ID!,
+  key_secret: RAZORPAY_SECRET_KEY!,
 });
 
 export const createOrderService = async (orderData:IOrderDocument) => {
@@ -64,20 +74,28 @@ export const getAllProductsFromOrders = async () => {
 };
 
 export const getAllCustomerNamesService = async () => {
-   const orders = await Order.find({}, "customer createdAt").sort({ createdAt: -1 });
+  const orders = await Order.find({}, "customer createdAt").sort({ createdAt: -1 });
 
-  // Map to customer objects
-  const customers = orders.map((o) => ({
-    _id: o._id.toString(),
-    name: o.customer.name,
-    email: o.customer.email,
-    phone: o.customer.contact,
-    address: `${o.customer.address}, ${o.customer.apartment || ""} ${o.customer.city}, ${o.customer.state} - ${o.customer.pincode}`.trim(),
-    createdAt: o.createdAt ? o.createdAt.toISOString() : new Date().toISOString(),
-  }));
+  // Map to customer objects, skipping entries without an email
+  const customers = orders
+    .map((o) => {
+      if (!o.customer.email) {
+        return null;
+      }
 
-  // Remove duplicate customers based on email (or name)
-  const uniqueCustomersMap = new Map<string, typeof customers[0]>();
+      return {
+        _id: o._id.toString(),
+        name: o.customer.name,
+        email: o.customer.email,
+        phone: o.customer.contact,
+        address: `${o.customer.address}, ${o.customer.apartment || ""} ${o.customer.city}, ${o.customer.state} - ${o.customer.pincode}`.trim(),
+        createdAt: o.createdAt ? o.createdAt.toISOString() : new Date().toISOString(),
+      };
+    })
+    .filter((c): c is NonNullable<typeof c> => Boolean(c));
+
+  // Remove duplicate customers based on email
+  const uniqueCustomersMap = new Map<string, (typeof customers)[0]>();
   customers.forEach((c) => {
     if (!uniqueCustomersMap.has(c.email)) {
       uniqueCustomersMap.set(c.email, c);

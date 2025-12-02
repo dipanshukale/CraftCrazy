@@ -57,35 +57,10 @@ const CheckoutPage: React.FC = () => {
   // Load Razorpay script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
-      // Check if already loaded
-      if ((window as any).Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      // Check if script already exists
-      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
-      if (existingScript) {
-        // Wait a bit for it to load
-        setTimeout(() => {
-          resolve(!!(window as any).Razorpay);
-        }, 500);
-        return;
-      }
-
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => {
-        // Give it a moment to initialize
-        setTimeout(() => {
-          resolve(!!(window as any).Razorpay);
-        }, 100);
-      };
-      script.onerror = () => {
-        console.error("Failed to load Razorpay SDK");
-        resolve(false);
-      };
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
   };
@@ -118,6 +93,15 @@ const CheckoutPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const getAuthConfig = () =>
+    token
+      ? {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      : undefined;
+
   const handleRazorpayPayment = async (amount: number) => {
     setLoading(true);
 
@@ -130,12 +114,14 @@ const CheckoutPage: React.FC = () => {
 
     try {
       // create order on backend
+      const isEmailInput = formData.emailOrPhone.includes("@");
+
       const { data } = await axios.post(
         getApiUrl("api/order/createOrder"),
         {
           customer: {
             name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
+            email: isEmailInput ? formData.emailOrPhone : undefined,
             contact: formData.phone || formData.emailOrPhone,
             address: formData.address,
             apartment: formData.apartment,
@@ -153,7 +139,7 @@ const CheckoutPage: React.FC = () => {
           totalAmount: amount,
           paymentMethod: formData.paymentMethod,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        getAuthConfig()
       );
 
       console.log(data.orderId);
@@ -174,7 +160,7 @@ const CheckoutPage: React.FC = () => {
             await axios.post(
               getApiUrl("api/order/orderComplete"),
               { orderDBId: data.orderDBId, paymentId: response.razorpay_payment_id },
-              { headers: { Authorization: `Bearer ${token}` } }
+              getAuthConfig()
             );
             setToast("Payment successful!");
             clearCart();
@@ -193,53 +179,10 @@ const CheckoutPage: React.FC = () => {
           contact: formData.phone || formData.emailOrPhone,
         },
         theme: { color: "#5b2232" },
-        modal: {
-          ondismiss: function () {
-            setLoading(false);
-            setToast("Payment cancelled by user.");
-          },
-        },
       };
 
-      // Verify Razorpay is available
-      if (!(window as any).Razorpay) {
-        setToast("Razorpay SDK not loaded. Please refresh the page and try again.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const rzp = new (window as any).Razorpay(options);
-
-        // Handle payment failures
-        rzp.on("payment.failed", function (response: any) {
-          console.error("Payment failed:", response);
-          setLoading(false);
-          setToast(
-            response.error?.description ||
-              response.error?.reason ||
-              "Payment failed. Please try again or use a different payment method."
-          );
-        });
-
-        // Handle modal close
-        rzp.on("modal.close", function () {
-          setLoading(false);
-        });
-
-        // Handle errors
-        rzp.on("error", function (error: any) {
-          console.error("Razorpay error:", error);
-          setLoading(false);
-          setToast("An error occurred. Please try again or contact support.");
-        });
-
-        rzp.open();
-      } catch (error: any) {
-        console.error("Error opening Razorpay:", error);
-        setLoading(false);
-        setToast("Failed to open payment gateway. Please try again.");
-      }
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (err: any) {
       console.error(err);
       setToast(err.response?.data?.message || "Payment initiation failed. Please try again.");

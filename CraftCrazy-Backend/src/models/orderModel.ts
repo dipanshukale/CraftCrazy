@@ -17,7 +17,7 @@ const OrderSchema = new Schema<IOrderDocument>(
   {
     customer: {
       name: { type: String, required: true },
-      email: { type: String, required: true },
+      email: { type: String },
       contact: { type: String, required: true },
       address: { type: String, required: true },
       apartment: { type: String },
