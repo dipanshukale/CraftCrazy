@@ -57,7 +57,7 @@ const CheckoutPage: React.FC = () => {
   // Load Razorpay script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
-      // Check if Razorpay is already loaded
+      // Check if already loaded
       if ((window as any).Razorpay) {
         resolve(true);
         return;
@@ -66,15 +66,26 @@ const CheckoutPage: React.FC = () => {
       // Check if script already exists
       const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
       if (existingScript) {
-        existingScript.addEventListener('load', () => resolve(true));
-        existingScript.addEventListener('error', () => resolve(false));
+        // Wait a bit for it to load
+        setTimeout(() => {
+          resolve(!!(window as any).Razorpay);
+        }, 500);
         return;
       }
 
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
+      script.async = true;
+      script.onload = () => {
+        // Give it a moment to initialize
+        setTimeout(() => {
+          resolve(!!(window as any).Razorpay);
+        }, 100);
+      };
+      script.onerror = () => {
+        console.error("Failed to load Razorpay SDK");
+        resolve(false);
+      };
       document.body.appendChild(script);
     });
   };
@@ -110,34 +121,21 @@ const CheckoutPage: React.FC = () => {
   const handleRazorpayPayment = async (amount: number) => {
     setLoading(true);
 
-    // Validate Razorpay key
-    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
-    if (!razorpayKey) {
-      setToast("Razorpay configuration error. Please contact support.");
-      setLoading(false);
-      return;
-    }
-
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
-      setToast("Razorpay SDK failed to load. Please check your internet connection.");
+      setToast("Razorpay SDK failed to load. Are you online?");
       setLoading(false);
       return;
     }
 
     try {
-      // Ensure email is valid - use emailOrPhone if it's an email, otherwise use a placeholder
-      const customerEmail = formData.emailOrPhone.includes("@") 
-        ? formData.emailOrPhone 
-        : `customer_${formData.phone || formData.emailOrPhone}@crafticrazy.com`;
-
       // create order on backend
       const { data } = await axios.post(
         getApiUrl("api/order/createOrder"),
         {
           customer: {
             name: `${formData.firstName} ${formData.lastName}`,
-            email: customerEmail,
+            email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
             contact: formData.phone || formData.emailOrPhone,
             address: formData.address,
             apartment: formData.apartment,
@@ -158,19 +156,19 @@ const CheckoutPage: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      if (!data || !data.orderId) {
-        setToast("Failed to create payment order. Please try again.");
-        setLoading(false);
-        return;
+      console.log(data.orderId);
+
+      if (!data.orderId) {
+        console.log("Razorpay order ID not received from backend.");
       }
 
       const options = {
-        key: razorpayKey,
-        amount: amount * 100, // Amount in paise (must match the order amount)
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount: amount * 100,
         currency: "INR",
         name: "CraftiCrazy",
         description: "Order Payment",
-        order_id: data.orderId, // Razorpay order ID from backend (snake_case)
+        order_id: data.orderId, // Razorpay order ID from backend
         handler: async function (response: any) {
           try {
             await axios.post(
@@ -191,28 +189,60 @@ const CheckoutPage: React.FC = () => {
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
-          email: customerEmail,
+          email: formData.emailOrPhone.includes("@") ? formData.emailOrPhone : "",
           contact: formData.phone || formData.emailOrPhone,
         },
         theme: { color: "#5b2232" },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setLoading(false);
             setToast("Payment cancelled by user.");
-          }
-        }
+          },
+        },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
+      // Verify Razorpay is available
+      if (!(window as any).Razorpay) {
+        setToast("Razorpay SDK not loaded. Please refresh the page and try again.");
         setLoading(false);
-        setToast(`Payment failed: ${response.error.description || "Please try again."}`);
-      });
-      rzp.open();
+        return;
+      }
+
+      try {
+        const rzp = new (window as any).Razorpay(options);
+
+        // Handle payment failures
+        rzp.on("payment.failed", function (response: any) {
+          console.error("Payment failed:", response);
+          setLoading(false);
+          setToast(
+            response.error?.description ||
+              response.error?.reason ||
+              "Payment failed. Please try again or use a different payment method."
+          );
+        });
+
+        // Handle modal close
+        rzp.on("modal.close", function () {
+          setLoading(false);
+        });
+
+        // Handle errors
+        rzp.on("error", function (error: any) {
+          console.error("Razorpay error:", error);
+          setLoading(false);
+          setToast("An error occurred. Please try again or contact support.");
+        });
+
+        rzp.open();
+      } catch (error: any) {
+        console.error("Error opening Razorpay:", error);
+        setLoading(false);
+        setToast("Failed to open payment gateway. Please try again.");
+      }
     } catch (err: any) {
-      console.error("Payment error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Payment initiation failed. Please try again.";
-      setToast(errorMessage);
+      console.error(err);
+      setToast(err.response?.data?.message || "Payment initiation failed. Please try again.");
       setLoading(false);
     }
   };
