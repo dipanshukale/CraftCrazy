@@ -18,7 +18,7 @@ const Cart: React.FC<CartSidebarProps> = ({ isOpen, setIsOpen }) => {
     (sum, item) => sum + Number(item.price) * Number(item.quantity),
     0
   );
-  const shippingCharge = subtotal > 0 ? 50 : 0;
+  const shippingCharge = subtotal > 0 ? 1 : 0;
   const total = subtotal + shippingCharge;
 
   // Collapse sidebar when closing
