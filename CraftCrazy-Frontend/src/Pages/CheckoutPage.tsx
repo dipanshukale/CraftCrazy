@@ -148,7 +148,7 @@ const CheckoutPage: React.FC = () => {
 
       // Always use the key coming from backend (which reads live env vars).
       // This avoids accidentally falling back to any test key in frontend env.
-      const publicKey = data.keyId;
+      const publicKey = import.meta.env.VITE_RAZORPAY_KEY;
       console.log("Razorpay key used:", publicKey);
       if (!data.orderId || !data.orderDBId || !publicKey) {
         console.log("Razorpay order initialization info missing.", data);
