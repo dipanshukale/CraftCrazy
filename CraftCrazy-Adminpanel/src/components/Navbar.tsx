@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Bell,
   Search,
   ChevronDown,
-  Settings,
   LogOut,
   Menu,
-  X,
 } from "lucide-react";
+
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import debounce from "lodash.debounce";
@@ -28,8 +26,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [admin, setAdmin] = useState<AdminData | null>(null);
-  const [notifications, setNotifications] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
 
 
@@ -40,20 +36,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
 
   const { logout } = useAuth();
   const navigate = useNavigate();
-
-  // Fetch admin profile
-  useEffect(() => {
-    axios
-      .get(getApiUrl("api/admin/profile"))
-      .then((res) => setAdmin(res.data))
-      .catch(() =>
-        setAdmin({
-          name: "Admin User",
-          role: "Dashboard Manager",
-          avatar: "http://localhost:5173/logo.png",
-        })
-      );
-  }, []);
 
   // Debounced Search
   const fetchSearch = useRef(

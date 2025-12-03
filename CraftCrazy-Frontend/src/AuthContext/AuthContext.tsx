@@ -59,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (userData: User, token: string) => {
     localStorage.setItem("token", token);
 
+    console.log(userData)
     const decoded: DecodedToken = jwtDecode(token);
 
     setUser({
