@@ -261,7 +261,7 @@ const CheckoutPage: React.FC = () => {
     if (formData.paymentMethod === "UPI") {
       handleRazorpayPayment(amount);
     } else {
-      // COD
+      // for future implementation of COD
       setToast("Order placed successfully! Cash on Delivery selected.");
       clearCart();
       setFormData(initialFormData);

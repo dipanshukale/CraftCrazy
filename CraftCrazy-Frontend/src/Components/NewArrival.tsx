@@ -1,9 +1,7 @@
 // src/Components/NewArrival.tsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart } from "../AuthContext/CartContext";
 import { Link } from "react-router-dom";
-import { useAuth } from "../AuthContext/AuthContext";
 import axios from "axios";
 import { getApiUrl } from "../utils/apiConfig";
 
@@ -40,10 +38,7 @@ const NewArrivals: React.FC = () => {
   const [sortOption, setSortOption] = useState("Default sorting");
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [cartQuantities, setCartQuantities] = useState<{ [key: string]: number }>({});
 
-  const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -121,24 +116,6 @@ const NewArrivals: React.FC = () => {
 
     fetchNewArrivals();
   }, []);
-
-  const handleAddToCart = (item: Product) => {
-    const currentQty = cartQuantities[item.id] || 0;
-    const newQty = currentQty + 1;
-
-    setCartQuantities((prev) => ({ ...prev, [item.id]: newQty }));
-
-    addToCart({
-      id: String(item.id),
-      name: item.name || item.heading || "Product",
-      image: item.image,
-      price: item.price,
-      quantity: 1,
-    });
-
-    setToast(isAuthenticated ? `${item.name || item.heading} added to cart` : "Please login first!");
-    setTimeout(() => setToast(null), 2000);
-  };
 
   const filteredProducts = products.filter((item) => {
 
@@ -334,15 +311,6 @@ const NewArrivals: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCart(item);
-                            }}
-                            className="mt-3 mx-2 mb-3 w-[calc(100%-1rem)] px-4 py-2 bg-[#C45A36] hover:bg-[#8c341f] text-white rounded-md text-sm font-medium transition-colors"
-                          >
-                            Add to Cart
-                          </button>
                         </Link>
                       </motion.div>
                     );

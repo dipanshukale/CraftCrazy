@@ -46,7 +46,7 @@ const Footer = () => {
               <Instagram size={24} />
             </a>
             <a
-              href="https://www.facebook.com/crafticrazy"
+              href="https://www.facebook.com/share/1Kb89Kyub2/"
               className="hover:text-blue-500 hover:scale-110 transition-transform duration-300"
               target="_blank"
               rel="noopener noreferrer"

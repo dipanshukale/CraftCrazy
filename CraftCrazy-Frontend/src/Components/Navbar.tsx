@@ -38,7 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ setCartOpen }) => {
   const [result, setResult] = useState<{ name: string; href: string }[]>([]);
   const [userDropdown, setUserDropdown] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { cart } = useCart();
+  const { cart,clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -49,6 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ setCartOpen }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    clearCart();
     setUserData(null);
     setUserDropdown(false);
     navigate("/login");
