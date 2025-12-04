@@ -33,7 +33,7 @@ interface IOrder {
 const CheckoutPage: React.FC = () => {
   const { cart, clearCart, updateCartItem } = useCart();
   const navigate = useNavigate();
-  const shippingCharges = 1;
+  const shippingCharges = 100;
 
   const initialFormData: IOrder = {
     emailOrPhone: "",
