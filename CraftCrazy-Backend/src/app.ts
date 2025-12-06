@@ -14,7 +14,7 @@ const allowedOrigins = [
   "https://craftcrazy-admincom.vercel.app/",
 ];
 
-// Debug log (optional)
+// Debug log 
 console.log("ALLOWED ORIGINS =>", allowedOrigins);
 
 app.use(
