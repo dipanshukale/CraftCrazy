@@ -12,8 +12,8 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Explicitly define allowed origins
 const allowedOrigins = [
-    "https://craft-crazy.vercel.app",
-    "https://craft-crazy-bu3y.vercel.app",
+    "https://craftcrazycom.vercel.app/",
+    "https://craftcrazy-admincom.vercel.app/",
 ];
 // Debug log (optional)
 console.log("ALLOWED ORIGINS =>", allowedOrigins);
