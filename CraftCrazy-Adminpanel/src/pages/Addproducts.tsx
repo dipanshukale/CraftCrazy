@@ -89,6 +89,13 @@ const AddProducts = () => {
     "engagement tray": "engagementtray",
     "haldi platter": "haldiplatter",
     "varmala": "varmala",
+    "Rose preservation": "rosepreservation",
+    "Bouquets": "bouquets",
+    "Chocolate hamper": "chocolatehamper",
+    "3D Miniature Frame": "3dminiatureframe",
+    "Scrapbook": "scrapbook",
+    "Explosion Box" : "explosionbox",
+    "Magazines": "magazines"
   };
 
   const [preview, setPreview] = useState<string | null>(null);
