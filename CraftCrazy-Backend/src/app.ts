@@ -12,7 +12,7 @@ const app: Application = express();
 const allowedOrigins = [
   "https://crafticrazy.com",
   "https://www.crafticrazy.com",
-  "https://craftcrazy-admincom.vercel.app",
+  "https://craftcrazy-admincom.vercel.app/",
 ];
 
 
