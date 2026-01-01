@@ -10,9 +10,11 @@ const app: Application = express();
 
 // Explicitly define allowed origins
 const allowedOrigins = [
-  "https://craftcrazycom.vercel.app",
-  "https://craftcrazy-admincom.vercel.app",
-]
+  "https://crafticrazy.com",
+  "https://www.crafticrazy.com",
+  "https://craftcrazy-admin.vercel.app",
+];
+
 
 // Debug log 
 console.log("ALLOWED ORIGINS =>", allowedOrigins);

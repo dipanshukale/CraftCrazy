@@ -20,7 +20,7 @@ const SuccessPage: React.FC = () => {
       position: "center",
       allowOutsideClick: false,
       background: "#ffffff",
-    });
+    });    
   }, []);
 
   return (
